@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-deployment
+  namespace: project1
+  annotations:
+    kubernetes.io/change-cause: "Node app 1.0.0 deployment"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: node
+  template:
+    metadata:
+      labels:
+        app: node
+    spec:
+      containers:
+        - name: node
+          image: freelearn2000/node-app:1.0.1
+          env:
+            - name: ENV
+              value: "DEVELOPMENT"
+            - name: NODE_PORT
+              value: "3000"
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "admin"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: "admin123"
+            - name: MONGO_INITDB_HOST
+              value: "mongodb-service"
+            - name: MONGO_INITDB_PORT
+              value: "3000"
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: node-config-volume
+              mountPath: /usr/app/configs/
+          resources:
+      volumes:
+        - name: node-config-volume
+          configMap:
+            name: node-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-service
+  namespace: project1
+spec:
+  type: LoadBalancer
+  selector:
+    app: node
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000
